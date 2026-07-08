@@ -10,7 +10,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .coordinator import PolarisDataUpdateCoordinator
-from .const import DOMAIN, POLARIS_KETTLE_WITH_BACKLIGHT_TYPE
+from .const import DOMAIN, POLARIS_KETTLE_WITH_BACKLIGHT_TYPE, POLARIS_HEATER_TYPE
+from .protocol import PowerType
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -35,6 +36,9 @@ async def async_setup_entry(
             VolumeSwitch(coordinator, config_entry.entry_id),
         ]
     
+    if coordinator.device_info['model_id'] in POLARIS_HEATER_TYPE:
+        switches.append(PowerSwitch(coordinator, config_entry.entry_id))
+
     async_add_entities(switches)
 
 class ChildLockSwitch(SwitchEntity):
@@ -151,6 +155,50 @@ class BacklightSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the backlight off."""
         await self.coordinator.async_set_backlight(False)
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_write_ha_state)
+        )
+
+    @property
+    def should_poll(self) -> bool:
+        """No need to poll, coordinator notifies of updates."""
+        return False
+
+
+class PowerSwitch(SwitchEntity):
+    """Representation of the heater power switch."""
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "power"
+    _attr_icon = "mdi:power"
+
+    def __init__(self, coordinator: PolarisDataUpdateCoordinator, entry_id: str) -> None:
+        """Initialize the Power switch."""
+        self.coordinator = coordinator
+        self._entry_id = entry_id
+        self._attr_unique_id = f"{coordinator._mac}_power"
+        self._attr_device_info = coordinator.device_info
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.get("connected", False)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if the heater is on."""
+        return self.coordinator.data.get("power_type", PowerType.OFF) != PowerType.OFF
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the heater on."""
+        await self.coordinator.async_set_power(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the heater off."""
+        await self.coordinator.async_set_power(False)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

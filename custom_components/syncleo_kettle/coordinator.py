@@ -551,6 +551,13 @@ class PolarisDataUpdateCoordinator(DataUpdateCoordinator, IncomingMessageListene
         await self._hass.async_add_executor_job(stop)
         
 
+    async def async_set_power(self, on: bool) -> None:
+        """Set power on/off."""
+        def set_power():
+            self.kettle.set_power(PowerType.ON if on else PowerType.OFF, lambda x: _LOGGER.debug(f"Power set callback: {x}"))
+
+        await self._hass.async_add_executor_job(set_power)
+
     async def async_set_child_lock(self, enabled: bool) -> None:
         """Set child lock state."""
         def set_child_lock():
