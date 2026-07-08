@@ -30,6 +30,22 @@
       },
       "backlight": {
         "name": "Подсветка"
+      },
+      "power": {
+        "name": "Питание"
+      }
+    },
+    "climate": {
+      "heater": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "Комфорт",
+              "eco": "Эко",
+              "away": "Антизамерзание"
+            }
+          }
+        }
       }
     },
     "water_heater": {

@@ -22,7 +22,15 @@
         }
       }
     },
+    "climate": {
+      "heater": {
+        "default": "mdi:radiator"
+      }
+    },
     "switch": {
+      "power": {
+        "default": "mdi:power"
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {

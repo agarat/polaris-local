@@ -23,13 +23,29 @@
   "entity": {
     "switch": {
       "child_lock": {
-        "name": "Child--Lock"
+        "name": "Child Lock"
       },
       "volume": {
         "name": "Volume"
       },
       "backlight": {
         "name": "Backlight"
+      },
+      "power": {
+        "name": "Power"
+      }
+    },
+    "climate": {
+      "heater": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "Comfort",
+              "eco": "Eco",
+              "away": "Anti frost"
+            }
+          }
+        }
       }
     },
     "water_heater": {
