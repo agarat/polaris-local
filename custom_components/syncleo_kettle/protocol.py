@@ -219,7 +219,13 @@ class Message:
                     cl = _cl
                     break
 
-            m = cl.from_packed_data(data, seq=head.seq)
+            try:
+                m = cl.from_packed_data(data, seq=head.seq)
+            except Exception as exc:
+                _logger.debug(f'type {type} failed to parse as {cl.__name__} ({exc}); falling back to UnknownMessage')
+                m = UnknownMessage.from_packed_data(data, seq=head.seq)
+                m.set_type(type)
+                return m
             if isinstance(m, UnknownMessage):
                 m.set_type(type)
             return m
