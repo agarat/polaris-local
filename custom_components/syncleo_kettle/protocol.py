@@ -413,6 +413,29 @@ class TargetTemperatureMessage(CmdOutgoingMessage, CmdIncomingMessage):
         return {'temperature': self.temperature}
 
 
+class HeatIntensityMessage(CmdOutgoingMessage):
+    """Heater intensity / power level (protocol type 15).
+
+    Value 0 = Auto, 1..10 = fixed power level. Outgoing only: incoming type-15
+    frames are read from UnknownMessage in the coordinator so kettle parsing is
+    untouched (the incoming dispatch only scans CmdIncomingMessage subclasses).
+    Setting a fixed level makes the heater switch to its manual mode (mode 4).
+    """
+    TYPE = 15
+
+    intensity: int
+
+    def __init__(self, intensity: int, seq: Optional[int] = None):
+        super().__init__(seq)
+        self.intensity = intensity
+
+    def pack_data(self) -> bytes:
+        return self.intensity.to_bytes(1, byteorder='little')
+
+    def _repr_fields(self) -> ReprDict:
+        return {'intensity': self.intensity}
+
+
 class PingMessage(CmdIncomingMessage, CmdOutgoingMessage):
     TYPE = 255
 

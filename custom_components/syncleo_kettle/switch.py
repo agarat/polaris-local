@@ -25,15 +25,14 @@ async def async_setup_entry(
     coordinator: PolarisDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     is_heater = coordinator.device_info['model_id'] in POLARIS_HEATER_TYPE
 
-    # Child lock is common to kettles and heaters.
-    switches = [ChildLockSwitch(coordinator, config_entry.entry_id)]
+    # Child lock and sound (volume) are common to kettles and heaters.
+    switches = [
+        ChildLockSwitch(coordinator, config_entry.entry_id),
+        VolumeSwitch(coordinator, config_entry.entry_id),
+    ]
 
-    # Volume (kettle beep) is a kettle-only entity; skip it for heaters.
-    if not is_heater:
-        switches.append(VolumeSwitch(coordinator, config_entry.entry_id))
-
-    # Backlight only for kettles that expose it.
-    if coordinator.device_info['model_id'] in POLARIS_KETTLE_WITH_BACKLIGHT_TYPE:
+    # Backlight/display: kettles that expose it, plus heaters (configurable display).
+    if is_heater or coordinator.device_info['model_id'] in POLARIS_KETTLE_WITH_BACKLIGHT_TYPE:
         switches.append(BacklightSwitch(coordinator, config_entry.entry_id))
 
     # Heaters expose power both via the climate entity and this dedicated switch.

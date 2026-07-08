@@ -315,6 +315,14 @@ HEATER_PRESET_TO_MODE = {
 }
 # mode value -> preset name (only the "on" modes; 0 = off)
 HEATER_MODE_TO_PRESET = {v: k for k, v in HEATER_PRESET_TO_MODE.items()}
+
+# Heater intensity / power level, exposed as the climate fan_mode.
+# type 15: 0 = Auto (tied to the active preset), 1..10 = fixed power level.
+# Selecting a fixed level makes the device switch to its manual mode (mode 4);
+# selecting a preset resets the intensity back to Auto.
+HEATER_FAN_AUTO = "auto"
+HEATER_FAN_MODES = [HEATER_FAN_AUTO] + [str(n) for n in range(1, 11)]
+HEATER_MAX_INTENSITY = 10
 POLARIS_HUMIDDIFIER_TYPE = ["4","15","17","18","25","44","70","71","72","73","74","75","87","99","137","147","153","155","157","158"]
 POLARIS_HUMIDDIFIER_WITH_IONISER_TYPE = ["4","15","17","18","44","70","72","73","74","137","147","153","155","157","158"]
 POLARIS_HUMIDDIFIER_WITH_WARM_STREAM_TYPE = ["4","15","17","18","44","70","72","74","147","157","158"]

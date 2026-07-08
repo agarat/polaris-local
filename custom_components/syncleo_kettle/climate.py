@@ -25,6 +25,9 @@ from .const import (
     HEATER_PRESET_COMFORT,
     HEATER_PRESET_TO_MODE,
     HEATER_MODE_TO_PRESET,
+    HEATER_FAN_AUTO,
+    HEATER_FAN_MODES,
+    HEATER_MAX_INTENSITY,
 )
 from .protocol import PowerType
 
@@ -57,12 +60,14 @@ class SyncleoHeaterClimate(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_preset_modes = list(HEATER_PRESET_TO_MODE.keys())
+    _attr_fan_modes = HEATER_FAN_MODES
     _attr_min_temp = HEATER_MIN_TEMP
     _attr_max_temp = HEATER_MAX_TEMP
     _attr_target_temperature_step = HEATER_TEMP_STEP
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
@@ -107,11 +112,21 @@ class SyncleoHeaterClimate(ClimateEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        """Return the current preset (comfort/eco/away), or None when off."""
+        """Return the current preset (comfort/eco/away).
+
+        None when off or when running a manual intensity level (the device then
+        reports a non-preset "manual" mode).
+        """
         power_type = self.coordinator.data.get("power_type", PowerType.OFF)
-        if power_type == PowerType.OFF:
-            return None
-        return HEATER_MODE_TO_PRESET.get(power_type.value, HEATER_PRESET_COMFORT)
+        return HEATER_MODE_TO_PRESET.get(power_type.value)
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the intensity as a fan mode: 'auto' or '1'..'10'."""
+        intensity = self.coordinator.data.get("intensity", 0)
+        if not intensity:
+            return HEATER_FAN_AUTO
+        return str(intensity)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -129,12 +144,28 @@ class SyncleoHeaterClimate(ClimateEntity):
                 )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set a preset (also powers the heater on)."""
+        """Set a preset (also powers the heater on; resets intensity to Auto)."""
         mode_value = HEATER_PRESET_TO_MODE.get(preset_mode)
         if mode_value is None:
             _LOGGER.warning("Unknown heater preset: %s", preset_mode)
             return
         await self.coordinator.async_set_power_type(PowerType(mode_value))
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set the intensity/power level. 'auto' or '1'..'10'.
+
+        A fixed level makes the device switch to its manual mode.
+        """
+        if fan_mode == HEATER_FAN_AUTO:
+            intensity = 0
+        else:
+            try:
+                intensity = int(fan_mode)
+            except ValueError:
+                _LOGGER.warning("Unknown heater fan mode: %s", fan_mode)
+                return
+            intensity = max(1, min(HEATER_MAX_INTENSITY, intensity))
+        await self.coordinator.async_set_intensity(intensity)
 
     async def async_turn_on(self) -> None:
         """Turn the heater on (Comfort)."""

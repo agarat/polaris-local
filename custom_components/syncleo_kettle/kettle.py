@@ -18,6 +18,7 @@ from .protocol import (
     NightMessage,
     ColorNightMessage,
     TargetTemperatureMessage,
+    HeatIntensityMessage,
     PowerType,
     ConnectionStatus,
     ConnectionStatusListener,
@@ -517,6 +518,16 @@ class Kettle(DeviceListener, ConnectionStatusListener):
         message = TargetTemperatureMessage(temp)
         self.conn.enqueue_message(WrappedMessage(message, handler=callback, ack=True))
         
+
+    def set_intensity(self, intensity: int, callback: callable):
+        """Set heater intensity/power level (0=Auto, 1..10)."""
+        if self.conn is None:
+            self._logger.error("Cannot set intensity: not connected")
+            callback(False)
+            return
+
+        message = HeatIntensityMessage(intensity)
+        self.conn.enqueue_message(WrappedMessage(message, handler=callback, ack=True))
 
     def set_child_lock(self, enabled: bool, callback: callable):
         """Set child lock state."""
