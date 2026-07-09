@@ -34,6 +34,8 @@ from .protocol import (
 
 # Protocol type carrying the heater intensity/power level (0=Auto, 1..10).
 HEATER_INTENSITY_TYPE = 15
+# Protocol type carrying the heater open-window detection toggle (0=off, 1=on).
+HEATER_WINDOW_TYPE = 38
 
 _LOGGER = logging.getLogger(__name__)
 _LOGGER.setLevel(logging.DEBUG)
@@ -65,6 +67,7 @@ class PolarisDataUpdateCoordinator(DataUpdateCoordinator, IncomingMessageListene
             "backlight": False,
             "intensity": 0,  # 0 = Auto, 1..10 = fixed power level (heater)
             "current_power": None,  # instantaneous power output 0..10 (heater)
+            "window_detection": False,  # open-window detection enabled (heater)
             "night": False,
             "color_night": {"r": 0, "g": 0, "b": 0},
             "error": False,
@@ -266,6 +269,10 @@ class PolarisDataUpdateCoordinator(DataUpdateCoordinator, IncomingMessageListene
         elif isinstance(message, UnknownMessage) and message.type == HEATER_INTENSITY_TYPE:
             # Heater intensity/power level (type 15): 0=Auto, 1..10.
             self.data["intensity"] = message.data[0] if message.data else 0
+
+        elif isinstance(message, UnknownMessage) and message.type == HEATER_WINDOW_TYPE:
+            # Heater open-window detection toggle (type 38): 0=off, 1=on.
+            self.data["window_detection"] = bool(message.data[0]) if message.data else False
         
         # Schedule update for entities
         self.async_set_updated_data(self.data)
@@ -586,6 +593,13 @@ class PolarisDataUpdateCoordinator(DataUpdateCoordinator, IncomingMessageListene
             self.kettle.set_intensity(intensity, lambda x: _LOGGER.debug(f"Intensity set callback: {x}"))
 
         await self._hass.async_add_executor_job(set_intensity)
+
+    async def async_set_window_detection(self, enabled: bool) -> None:
+        """Enable/disable heater open-window detection."""
+        def set_window_detection():
+            self.kettle.set_window_detection(enabled, lambda x: _LOGGER.debug(f"Window detection set callback: {x}"))
+
+        await self._hass.async_add_executor_job(set_window_detection)
 
     async def async_set_child_lock(self, enabled: bool) -> None:
         """Set child lock state."""

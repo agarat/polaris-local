@@ -436,6 +436,27 @@ class HeatIntensityMessage(CmdOutgoingMessage):
         return {'intensity': self.intensity}
 
 
+class WindowDetectionMessage(CmdOutgoingMessage):
+    """Heater open-window detection toggle (protocol type 38): 0=off, 1=on.
+
+    Outgoing only: incoming type-38 frames are read from UnknownMessage in the
+    coordinator so kettle parsing is untouched.
+    """
+    TYPE = 38
+
+    value: bool
+
+    def __init__(self, value: bool, seq: Optional[int] = None):
+        super().__init__(seq)
+        self.value = value
+
+    def pack_data(self) -> bytes:
+        return struct.pack('<B', 1 if self.value else 0)
+
+    def _repr_fields(self) -> ReprDict:
+        return {'window_detection': self.value}
+
+
 class PingMessage(CmdIncomingMessage, CmdOutgoingMessage):
     TYPE = 255
 

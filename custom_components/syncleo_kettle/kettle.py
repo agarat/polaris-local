@@ -19,6 +19,7 @@ from .protocol import (
     ColorNightMessage,
     TargetTemperatureMessage,
     HeatIntensityMessage,
+    WindowDetectionMessage,
     PowerType,
     ConnectionStatus,
     ConnectionStatusListener,
@@ -527,6 +528,16 @@ class Kettle(DeviceListener, ConnectionStatusListener):
             return
 
         message = HeatIntensityMessage(intensity)
+        self.conn.enqueue_message(WrappedMessage(message, handler=callback, ack=True))
+
+    def set_window_detection(self, enabled: bool, callback: callable):
+        """Enable/disable heater open-window detection (type 38)."""
+        if self.conn is None:
+            self._logger.error("Cannot set window detection: not connected")
+            callback(False)
+            return
+
+        message = WindowDetectionMessage(enabled)
         self.conn.enqueue_message(WrappedMessage(message, handler=callback, ack=True))
 
     def set_child_lock(self, enabled: bool, callback: callable):

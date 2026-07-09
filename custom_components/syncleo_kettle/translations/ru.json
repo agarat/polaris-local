@@ -33,6 +33,9 @@
       },
       "power": {
         "name": "Питание"
+      },
+      "window_detection": {
+        "name": "Определение открытого окна"
       }
     },
     "climate": {

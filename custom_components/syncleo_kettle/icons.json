@@ -31,6 +31,12 @@
       "power": {
         "default": "mdi:power"
       },
+      "window_detection": {
+        "default": "mdi:window-open-variant",
+        "state": {
+          "off": "mdi:window-closed-variant"
+        }
+      },
       "volume": {
         "default": "mdi:volume-high",
         "state": {
