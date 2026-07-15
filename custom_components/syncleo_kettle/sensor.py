@@ -33,21 +33,21 @@ async def async_setup_entry(
     if coordinator.device_info is None:
         _LOGGER.error("Device info not available, cannot create entity")
         return
-    # Добавляем только чайники с весом
+    is_heater = coordinator.device_info['model_id'] in POLARIS_HEATER_TYPE
+
+    sensors = [CurrentTemperatureSensor(coordinator, config_entry.entry_id)]
+
+    # Device Hardware is a kettle-only diagnostic; on heaters it only ever reads
+    # "unknown", so skip it for heater-class devices.
+    if not is_heater:
+        sensors.append(DeviceHardwareSensor(coordinator, config_entry.entry_id))
+
+    # Только чайники с весом сообщают вес.
     if coordinator.device_info['model_id'] in POLARIS_KETTLE_WITH_WEIGHT_TYPE:
-        sensors = [
-            CurrentTemperatureSensor(coordinator, config_entry.entry_id),
-            DeviceHardwareSensor(coordinator, config_entry.entry_id),
-            WeightSensor(coordinator, config_entry.entry_id),
-        ]
-    else:
-        sensors = [
-            CurrentTemperatureSensor(coordinator, config_entry.entry_id),
-            DeviceHardwareSensor(coordinator, config_entry.entry_id),
-        ]
+        sensors.append(WeightSensor(coordinator, config_entry.entry_id))
 
     # Heaters report an instantaneous power output level (0..10).
-    if coordinator.device_info['model_id'] in POLARIS_HEATER_TYPE:
+    if is_heater:
         sensors.append(CurrentPowerSensor(coordinator, config_entry.entry_id))
 
     async_add_entities(sensors)

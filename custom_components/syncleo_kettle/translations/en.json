@@ -31,9 +31,6 @@
       "backlight": {
         "name": "Backlight"
       },
-      "power": {
-        "name": "Power"
-      },
       "window_detection": {
         "name": "Open Window Detection"
       }

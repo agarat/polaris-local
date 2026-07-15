@@ -571,14 +571,7 @@ class PolarisDataUpdateCoordinator(DataUpdateCoordinator, IncomingMessageListene
             self.kettle.stop_all()
         
         await self._hass.async_add_executor_job(stop)
-        
 
-    async def async_set_power(self, on: bool) -> None:
-        """Set power on/off."""
-        def set_power():
-            self.kettle.set_power(PowerType.ON if on else PowerType.OFF, lambda x: _LOGGER.debug(f"Power set callback: {x}"))
-
-        await self._hass.async_add_executor_job(set_power)
 
     async def async_set_power_type(self, power_type: PowerType) -> None:
         """Set the raw mode/power value (used by the heater for presets)."""
